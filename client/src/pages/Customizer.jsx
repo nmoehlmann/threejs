@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useSnapshot } from 'valtio'
 import Tab from '../components/Tab'
 import { CustomButton } from '../components'
-import {ColorPicker, FilePicker} from '../components'
+import {ColorPicker, FilePicker, AIPicker} from '../components'
 
 import config from '../config/config'
 import state from '../store'
@@ -17,8 +17,8 @@ const Customizer = () => {
 
   const [file, setFile] = useState('');
 
-  const [promp, setPromp] = useState('');
-  const [generateImg, setGenerateImg] = useState(false);
+  const [prompt, setPrompt] = useState('');
+  const [generatingImg, setGeneratingImg] = useState(false);
 
   const [activeEditorTab, setActiveEditorTab] = useState('');
   const [activeFilterTab, setActiveFilterTab] = useState({
@@ -53,6 +53,21 @@ const Customizer = () => {
     if(!prompt) return alert("Please enter a prompt")
     try {
       //  call our backend to generate an ai image!
+      setGeneratingImg(true);
+
+      const response = await fetch('http://localhost:8080/api/v1/dalle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          prompt,
+        })
+      }) 
+
+      const data = await response.json();
+
+      handleDecals(type, `data:image/png;base64,${data.photo}`)
     } catch (error) {
       alert(error)
     } finally {
@@ -78,9 +93,11 @@ const Customizer = () => {
         break;
       case "stylishShirt":
         state.isFullTexture = !activeFilterTab[tabName];
+        break;
       default:
         state.isLogoTexture = true;
         state.isFullTexture = false;
+        break;
     }
 
     setActiveFilterTab((prevState) => {
